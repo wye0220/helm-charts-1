@@ -56,6 +56,7 @@ spec:
             - --metrics-enabled={{ .Values.metrics.enabled }}
             - --dashboard-enabled={{ .Values.dashboard.enabled }}
             - --datastore-engine={{ .Values.datastore.engine }}
+            - --datastore-conn-max-open={{ .Values.datastore.connection.maxOpenConn }}
 
             {{- if and (ne .Values.datastore.engine "memory") (not .Values.datastore.connection.uriSecretName) }}
             - --datastore-conn-uri={{ .Values.datastore.connection.uri }}
@@ -71,13 +72,6 @@ spec:
             {{- if .Values.dispatch.enabled }}
             - --dispatch-upstream-addr=kubernetes://{{ include "spicedb.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.dispatch.port }}
             {{- end -}}
-
-            {{- range $key, $value := .Values.extraArgs }}
-            {{- if $value }}
-            - --{{ $key }}={{ $value }}
-            {{- else }}
-            - --{{ $key }}
-            {{- end }}
 
             {{- if .Values.metrics.enabled }}
             {{- end -}}
