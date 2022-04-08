@@ -14,7 +14,7 @@ spec:
       labels:
         {{- include "spicedb.labels" . | nindent 4 }}
     spec:
-      restartyPolicy: Never 
+      restartPolicy: Never 
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml | nindent 8 }}
