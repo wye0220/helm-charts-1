@@ -22,7 +22,14 @@ spec:
       containers:
         - name: migrate
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          command: ["/bin/sh", "-c", "/opt/spicedb migrate head --datastore-engine={{ .Values.datastore.engine }} --datastore-conn-uri=\"{{ .Values.datastore.connection.uri }}\""]
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - migrate
+            - head
+            - --datastore-engine={{ .Values.datastore.engine }}
+            {{- if and (ne .Values.datastore.engine "memory") (not .Values.datastore.connection.uriSecretName) }}
+            - --datastore-conn-uri={{ .Values.datastore.connection.uri }}
+            {{- end }}
           envFrom: 
             - secretRef:
                 name: {{ include "spicedb.fullname" . }}
