@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "spicedb.fullname" . }}
+  labels:
+    {{- include "spicedb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  template:
+    metadata:
+      name: {{ include "spicedb.fullname" . }}
+      labels:
+        {{- include "spicedb.labels" . | nindent 4 }}
+    spec:
+      restartyPolicy: Never 
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml. | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - migrate
+            - head
+            - --datastore-engine={{ .Values.datastore.engine }}
+            {{- if and (ne .Values.datastore.engine "memory") (not .Values.datastore.connection.uriSecretName) }}
+            - --datastore-conn-uri={{ .Values.datastore.connection.uri }}
+            {{- end }}
+          envFrom: 
+            - secretRef:
+                name: {{ include "spicedb.fullname" . }}
