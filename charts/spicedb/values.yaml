@@ -12,7 +12,7 @@ datastore:
     ### Define either uri or uriSecretName but not both
     uri:
     uriSecretName:
-    maxOpenConn: 30
+    maxOpenConn: 50
     minOpenConn: 10
   gc:
     interval: 3m0s

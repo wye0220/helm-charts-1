@@ -11,8 +11,6 @@ spec:
   template:
     metadata:
       name: {{ include "spicedb.fullname" . }}
-      labels:
-        {{- include "spicedb.labels" . | nindent 4 }}
     spec:
       restartPolicy: Never 
       {{- with .Values.imagePullSecrets }}
