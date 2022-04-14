@@ -68,6 +68,7 @@ spec:
             - --dashboard-enabled={{ .Values.dashboard.enabled }}
             - --datastore-engine={{ .Values.datastore.engine }}
             - --datastore-conn-max-open={{ .Values.datastore.connection.maxOpenConn }}
+            - --datastore-conn-min-open={{ .Values.datastore.connection.minOpenConn }}
 
             {{- if and (ne .Values.datastore.engine "memory") (not .Values.datastore.connection.uriSecretName) }}
             - --datastore-conn-uri={{ .Values.datastore.connection.uri }}
