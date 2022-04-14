@@ -12,7 +12,7 @@ spec:
     metadata:
       name: {{ include "spicedb.fullname" . }}
     spec:
-      restartPolicy: Never 
+      restartPolicy: Never
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml | nindent 8 }}
@@ -28,6 +28,12 @@ spec:
             {{- if and (ne .Values.datastore.engine "memory") (not .Values.datastore.connection.uriSecretName) }}
             - --datastore-conn-uri={{ .Values.datastore.connection.uri }}
             {{- end }}
-          envFrom: 
-            - secretRef:
-                name: {{ include "spicedb.fullname" . }}
+          env:
+            {{- if and (ne .Values.datastore.engine "memory") .Values.datastore.connection.uriSecretName }}
+            - name: SPICEDB_DATASTORE_CONN_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "'datastore.connection.uriSecretName' is required" .Values.datastore.connection.uriSecretName }}
+                  key: uri
+                  optional: false
+            {{- end }}
