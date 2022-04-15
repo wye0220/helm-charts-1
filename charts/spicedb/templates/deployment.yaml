@@ -41,8 +41,6 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: "SPICEDB_GRPC_SHUTDOWN_GRACE_PERIOD"
-              value: "1s"
             {{- if and .Values.grpc.enabled (not .Values.grpc.presharedKey) }}
             - name: SPICEDB_GRPC_PRESHARED_KEY
               valueFrom:
@@ -69,6 +67,7 @@ spec:
             - --datastore-engine={{ .Values.datastore.engine }}
             - --datastore-conn-max-open={{ .Values.datastore.connection.maxOpenConn }}
             - --datastore-conn-min-open={{ .Values.datastore.connection.minOpenConn }}
+            - --grpc-shutdown-grace-period={{ .Values.grpc.shutdownGracePeriod }}
 
             {{- if and (ne .Values.datastore.engine "memory") (not .Values.datastore.connection.uriSecretName) }}
             - --datastore-conn-uri={{ .Values.datastore.connection.uri }}
