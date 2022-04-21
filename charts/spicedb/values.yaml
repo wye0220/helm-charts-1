@@ -1,10 +1,14 @@
+### Enable to require TLS decrpytion at pod level, otherwise assumed it's handled at the NLB
+service:
+  tls:
+    enabled: false
+    path: /etc/tls
+    ### Required (if dispatch.tls.enabled)
+    secretName:
+
 dashboard:
   enabled: true
   port: 8080
-  tls:
-    enabled: false
-    cert:
-    key:
 
 datastore:
   engine: memory
@@ -26,10 +30,6 @@ dispatch:
 grpc:
   enabled: true
   port: 50051
-  tls:
-    enabled: false
-    cert:
-    key:
   ### Define either presharedKey or presharedKeySecretName but not both
   presharedKey:
   presharedKeySecretName:
@@ -40,10 +40,6 @@ grpc:
 http:
   enabled: true
   port: 8443
-  tls:
-    enabled: false
-    cert:
-    key:
 
 metrics:
   enabled: true

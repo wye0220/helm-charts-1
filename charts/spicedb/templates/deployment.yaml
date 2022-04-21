@@ -84,6 +84,15 @@ spec:
             - --dispatch-upstream-addr=kubernetes://{{ include "spicedb.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.dispatch.port }}
             {{- end -}}
 
+            {{- if .Values.service.tls.enabled }}
+            - --dispatch-cluster-tls-cert-path={{ .Values.service.tls.path }}/cert
+            - --dispatch-cluster-tls-key-path={{ .Values.service.tls.path }}/key
+            - --grpc-tls-cert-path={{ .Values.service.tls.path }}/cert
+            - --grpc-tls-key-path={{ .Values.service.tls.path }}/key
+            - --http-tls-cert-path={{ .Values.service.tls.path }}/cert
+            - --http-tls-key-path={{ .Values.service.tls.path }}/key
+            {{- end -}}
+
             {{- if .Values.metrics.enabled }}
             {{- end -}}
 
@@ -124,6 +133,16 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 5
+      {{- if .Values.service.tls.enabled }}
+          volumeMounts:
+            - mountPath: {{ .Values.service.tls.path }}
+              name: service-tls
+              readOnly: true
+      volumes:
+        - name: service-tls
+          secret:
+            secretName: {{ required "'dispatch.service.tls.secretName' is required when 'service.tls.enabled'" .Values.service.tls.secretName }}
+      {{- end -}}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
