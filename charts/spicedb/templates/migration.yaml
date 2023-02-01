@@ -22,6 +22,32 @@ spec:
         {{- toYaml | nindent 8 }}
       {{- end }}
       containers:
+        - image: datadog/agent
+          name: datadog-agent
+          ports:
+            - containerPort: 8125
+              name: dogstatsdport
+              protocol: UDP
+            - containerPort: 8126
+              name: traceport
+              protocol: TCP
+          env:
+            - name: DD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: datadog-access
+                  key: key
+            - name: DD_SITE
+              value: "datadoghq.com"
+            - name: DD_EKS_FARGATE
+              value: "true"
+            - name: DD_CLUSTER_NAME
+              value: "preview.eks.paywithextend.com"
+            - name: DD_KUBERNETES_KUBELET_NODENAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
         - name: migrate
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
