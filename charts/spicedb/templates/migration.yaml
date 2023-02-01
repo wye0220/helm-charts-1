@@ -32,11 +32,6 @@ spec:
           args:
             - migrate
             - head
-            - --datastore-engine={{ .Values.datastore.engine }}
-            {{- if and (ne .Values.datastore.engine "memory") (not .Values.datastore.connection.uriSecretName) }}
-            - --datastore-conn-uri={{ .Values.datastore.connection.uri }}
-            {{- end }}
-            - --log-level={{ .Values.logLevel }}
           env:
             {{- if and (ne .Values.datastore.engine "memory") .Values.datastore.connection.uriSecretName }}
             - name: SPICEDB_DATASTORE_CONN_URI
@@ -46,3 +41,7 @@ spec:
                   key: uri
                   optional: false
             {{- end }}
+            - name: SPICEDB_DATASTORE_ENGINE
+              value: {{ .Values.datastore.engine }}
+            - name: SPICEDB_LOG_LEVEL
+              value: {{ .Values.logLevel }}
