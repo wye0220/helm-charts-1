@@ -1,10 +1,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name:  "spicedb-migration"
+  name: {{ include "spicedb.fullname" . }}-migration
   labels:
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: spicedb
+    {{- include "spicedb.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "-5"
@@ -12,26 +11,38 @@ metadata:
 spec:
   template:
     metadata:
-      name: "spicedb-migration"
+      name: {{ include "spicedb.fullname" . }}-migration
       labels:
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/instance: spicedb
+        {{- include "spicedb.labels" . | nindent 4 }}
     spec:
       tolerations:
         - effect: NoSchedule
           key: eks.amazonaws.com/compute-type
           value: fargate
       restartPolicy: Never
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml | nindent 8 }}
+      {{- end }}
       containers:
         - name: migrate
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["spicedb"]
-          args: ["migrate", "head", "--datastore-engine", "postgres", "--datastore-conn-uri", "$(SPICEDB_DATASTORE_CONN_URI)", "--log-level", "DEBUG"]
-          env:
-            - name: SPICEDB_DATASTORE_CONN_URI
-              valueFrom:
-                secretKeyRef:
-                  name: {{ required "'datastore.connection.uriSecretName' is required" .Values.datastore.connection.uriSecretName }}
-                  key: uri
-                  optional: false
+          command: ["spicedb"
+            args:
+              - migrate
+              - head
+              - --datastore-engine={{ .Values.datastore.engine }}
+              {{- if and (ne .Values.datastore.engine "memory") (not .Values.datastore.connection.uriSecretName) }}
+              - --datastore-conn-uri={{ .Values.datastore.connection.uri }}
+              {{- end }}
+              - --log-level={{ .Values.logLevel }}
+              env:
+                {{- if and (ne .Values.datastore.engine "memory") .Values.datastore.connection.uriSecretName }}
+                - name: SPICEDB_DATASTORE_CONN_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ required "'datastore.connection.uriSecretName' is required" .Values.datastore.connection.uriSecretName }}
+                      key: uri
+                      optional: false
+                {{- end }}
