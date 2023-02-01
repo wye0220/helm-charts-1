@@ -1,39 +1,37 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "spicedb.fullname" . }}
+  name:  "spicedb-migration"
   labels:
-    {{- include "spicedb.labels" . | nindent 4 }}
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: spicedb
   annotations:
     "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
   template:
     metadata:
-      name: {{ include "spicedb.fullname" . }}
+      name: "spicedb-migration"
+      labels:
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: spicedb
     spec:
+      tolerations:
+        - effect: NoSchedule
+          key: eks.amazonaws.com/compute-type
+          value: fargate
       restartPolicy: Never
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml | nindent 8 }}
-      {{- end }}
       containers:
         - name: migrate
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          args:
-            - migrate
-            - head
-            - --datastore-engine={{ .Values.datastore.engine }}
-            {{- if and (ne .Values.datastore.engine "memory") (not .Values.datastore.connection.uriSecretName) }}
-            - --datastore-conn-uri={{ .Values.datastore.connection.uri }}
-            {{- end }}
+          command: ["spicedb"]
+          args: ["migrate", "head", "--datastore-engine", "postgres", "--datastore-conn-uri", "$(SPICEDB_DATASTORE_CONN_URI)", "--log-level", "DEBUG"]
           env:
-            {{- if and (ne .Values.datastore.engine "memory") .Values.datastore.connection.uriSecretName }}
             - name: SPICEDB_DATASTORE_CONN_URI
               valueFrom:
                 secretKeyRef:
                   name: {{ required "'datastore.connection.uriSecretName' is required" .Values.datastore.connection.uriSecretName }}
                   key: uri
                   optional: false
-            {{- end }}
