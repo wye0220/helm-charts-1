@@ -12,8 +12,6 @@ spec:
   template:
     metadata:
       name: {{ include "spicedb.fullname" . }}-migration
-      labels:
-        {{- include "spicedb.labels" . | nindent 8 }}
     spec:
       tolerations:
         - effect: NoSchedule
